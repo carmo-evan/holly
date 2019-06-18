@@ -2,6 +2,7 @@ package sqlstore
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/carmo-evan/holly/model"
 	uuid "github.com/satori/go.uuid"
@@ -17,7 +18,8 @@ type SQLSKUStore struct {
 // Insert commits new p to the database
 func (sks *SQLSKUStore) Insert(s *model.SKU) (*model.SKU, error) {
 	s.SKUID = uuid.NewV4().String()
-
+	s.CreatedAt = time.Now().UnixNano()
+	s.UpdatedAt = s.CreatedAt
 	err := sks.SQLStore.Tx.Insert(s)
 	if err != nil {
 		err = fmt.Errorf("[SQLKUStore] error in calling Insert: %v", err)
@@ -28,6 +30,7 @@ func (sks *SQLSKUStore) Insert(s *model.SKU) (*model.SKU, error) {
 
 // Update saves changes made to s to the database
 func (sks *SQLSKUStore) Update(s *model.SKU) (*model.SKU, error) {
+	s.UpdatedAt = time.Now().UnixNano()
 	_, err := sks.SQLStore.Tx.Update(s)
 	return s, err
 }

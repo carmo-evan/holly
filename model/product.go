@@ -1,11 +1,5 @@
 package model
 
-import (
-	"time"
-
-	"gopkg.in/gorp.v1"
-)
-
 // Product represents the common properties of a collection of skus
 type Product struct {
 	ProductID    string `json:"productID" db:"product_id"`
@@ -17,16 +11,4 @@ type Product struct {
 	Description  string `json:"description" db:"description"`
 	DefaultSKUID string `json:"defaultSkuID" db:"default_sku_id"`
 	SKUIDs       string `json:"skuIDs" db:"sku_ids"`
-}
-
-// PreInsert guarantees timestamps are set and that a defaultSKU exists
-func (p *Product) PreInsert(s gorp.SqlExecutor) error {
-	p.CreatedAt = time.Now().UnixNano()
-	p.UpdatedAt = p.CreatedAt
-	return nil
-}
-
-func (p *Product) PreUpdate(s gorp.SqlExecutor) error {
-	p.UpdatedAt = time.Now().UnixNano()
-	return nil
 }

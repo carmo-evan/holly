@@ -2,6 +2,7 @@ package sqlstore
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/carmo-evan/holly/model"
 	uuid "github.com/satori/go.uuid"
@@ -15,7 +16,8 @@ type SQLProductStore struct {
 // Insert commits new p to the database
 func (sp *SQLProductStore) Insert(p *model.Product) (*model.Product, error) {
 	p.ProductID = uuid.NewV4().String()
-
+	p.CreatedAt = time.Now().UnixNano()
+	p.UpdatedAt = p.CreatedAt
 	err := sp.SQLStore.Tx.Insert(p)
 	if err != nil {
 		err = fmt.Errorf("[SQLProductStore] error in calling Insert: %v", err)
@@ -26,6 +28,7 @@ func (sp *SQLProductStore) Insert(p *model.Product) (*model.Product, error) {
 
 // Update saves changes made to p to the database
 func (sp *SQLProductStore) Update(p *model.Product) (*model.Product, error) {
+	p.UpdatedAt = time.Now().UnixNano()
 	_, err := sp.SQLStore.Tx.Update(p)
 	return p, err
 }

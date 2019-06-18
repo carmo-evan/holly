@@ -5,17 +5,14 @@ import (
 
 	app "github.com/carmo-evan/holly/app"
 	"github.com/carmo-evan/holly/model"
-	store "github.com/carmo-evan/holly/store"
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	ops := app.Options{DbFlavor: store.Postgres}
-	app, err := app.NewApp(ops)
+	app, err := app.NewApp()
 	if err != nil {
 		panic(err)
 	}
-	defer app.Store.Commit()
 	defer app.Store.Close()
 
 	var wg sync.WaitGroup
@@ -30,34 +27,32 @@ func doStuff(wg *sync.WaitGroup, i int, app *app.App) {
 	defer wg.Done()
 
 	istr := string(i%84 + 1)
-	p := &model.Product{Name: istr, DisplayName: istr, Description: istr}
-	p, err := app.Store.Product().Insert(p)
 
-	if err != nil {
-		panic(err)
-	}
+	schan := make(chan *model.SKU, 1)
 
-	s := &model.SKU{Name: p.Name, Description: p.Description, ProductID: p.ProductID, Price: 1999}
-	s, err = app.Store.SKU().Insert(s)
+	go func() {
+		_, s, err := app.CreateProductWithDefaultSku(1999, istr, istr, istr)
+		if err != nil {
+			panic(err)
+		}
+		schan <- s
+	}()
 
-	if err != nil {
-		panic(err)
-	}
+	ochan := make(chan *model.Order, 1)
 
-	p.DefaultSKUID = s.SKUID
-	p.DisplayName = p.DisplayName + "Updated"
-	p, err = app.Store.Product().Update(p)
-	if err != nil {
-		panic(err)
-	}
+	go func() {
+		u, err := app.CreateUser(istr + "@mailinator.com")
+		if err != nil {
+			panic(err)
+		}
+		o, err := app.CreateOrder(u.UserID)
+		if err != nil {
+			panic(err)
+		}
+		ochan <- o
+	}()
 
-	oi := &model.OrderItem{SkuID: s.SKUID, Price: 1500}
-	oi, err = app.Store.OrderItem().Insert(oi)
-	if err != nil {
-		panic(err)
-	}
-	o := &model.Order{OrderItemIDs: oi.OrderItemID, Total: oi.Price}
-	o, err = app.Store.Order().Insert(o)
-	oi.OrderID = o.OrderID
-	app.Store.OrderItem().Update(oi)
+	o := <-ochan
+	s := <-schan
+	app.AddOrderItem(o.OrderID, s.SKUID, 1)
 }

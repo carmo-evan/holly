@@ -16,8 +16,8 @@ type Store interface {
 	SKU() SKUStore
 	Order() OrderStore
 	OrderItem() OrderItemStore
+	User() UserStore
 	Close() error
-	Commit() error
 }
 
 //ProductStore outlines CRUD methods related to Products
@@ -41,6 +41,14 @@ type OrderStore interface {
 	Insert(product *model.Order) (*model.Order, error)
 	Update(product *model.Order) (*model.Order, error)
 	Get(OrderID string) (*model.Order, error)
+	CreateTable() error
+}
+
+//UserStore outlines CRUD methods related to Users
+type UserStore interface {
+	Insert(user *model.User) (*model.User, error)
+	Update(user *model.User) (*model.User, error)
+	Get(UserID string) (*model.User, error)
 	CreateTable() error
 }
 

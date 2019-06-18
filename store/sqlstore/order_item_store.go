@@ -1,6 +1,8 @@
 package sqlstore
 
 import (
+	"time"
+
 	"github.com/carmo-evan/holly/model"
 	uuid "github.com/satori/go.uuid"
 )
@@ -13,12 +15,15 @@ type SQLOrderItemStore struct {
 // Insert commits new p to the database
 func (so *SQLOrderItemStore) Insert(oi *model.OrderItem) (*model.OrderItem, error) {
 	oi.OrderItemID = uuid.NewV4().String()
+	oi.CreatedAt = time.Now().UnixNano()
+	oi.UpdatedAt = oi.CreatedAt
 	err := so.SQLStore.Tx.Insert(oi)
 	return oi, err
 }
 
 // Update saves changes made to p to the database
 func (so *SQLOrderItemStore) Update(oi *model.OrderItem) (*model.OrderItem, error) {
+	oi.UpdatedAt = time.Now().UnixNano()
 	_, err := so.SQLStore.Tx.Update(oi)
 	return oi, err
 }
